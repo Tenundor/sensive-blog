@@ -1,6 +1,34 @@
 from django.db import models
+from django.db.models import Count
 from django.urls import reverse
 from django.contrib.auth.models import User
+
+
+class TagQuerySet(models.QuerySet):
+
+    def popular(self):
+        return self.annotate(num_posts=Count('posts')).order_by('-num_posts')
+
+
+class PostQuerySet(models.QuerySet):
+
+    def popular(self):
+        return self.annotate(num_likes=Count('likes')).order_by('-num_likes')
+
+    def fetch_with_comments_count(self):
+        posts = list(self)
+        posts_ids = [post.id for post in posts]
+        filtered_posts = Post.objects.filter(id__in=posts_ids)
+        posts_with_comments = filtered_posts.annotate(
+            num_comments=Count("comments")
+        )
+        ids_and_comments = posts_with_comments.values_list("id",
+                                                           "num_comments")
+        count_for_id = dict(ids_and_comments)
+
+        for post in posts:
+            post.num_comments = count_for_id[post.id]
+        return posts
 
 
 class Post(models.Model):
@@ -25,6 +53,8 @@ class Post(models.Model):
         related_name="posts",
         verbose_name="Теги")
 
+    objects = PostQuerySet.as_manager()
+
     def __str__(self):
         return self.title
 
@@ -39,6 +69,8 @@ class Post(models.Model):
 
 class Tag(models.Model):
     title = models.CharField("Тег", max_length=20, unique=True)
+
+    objects = TagQuerySet.as_manager()
 
     def __str__(self):
         return self.title
