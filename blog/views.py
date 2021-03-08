@@ -52,16 +52,14 @@ def serialize_tag_optimised(tag):
 
 def fetch_most_popular_posts(returned_posts_number):
     posts = Post.objects.popular()[:returned_posts_number] \
-        .prefetch_related("author") \
-        .prefetch_related(Prefetch("tags", queryset=Tag.objects.annotate(num_posts=Count("posts")))) \
+        .prefetch_related("author", Prefetch("tags", queryset=Tag.objects.annotate(num_posts=Count("posts")))) \
         .fetch_with_comments_count()
     return posts
 
 
 def fetch_most_fresh_posts(returned_posts_number):
     posts = Post.objects.all().order_by("-published_at")[:returned_posts_number] \
-        .prefetch_related("author") \
-        .prefetch_related(Prefetch("tags", queryset=Tag.objects.annotate(num_posts=Count("posts")))) \
+        .prefetch_related("author", Prefetch("tags", queryset=Tag.objects.annotate(num_posts=Count("posts")))) \
         .annotate(num_comments=Count("comments"))
     return posts
 
