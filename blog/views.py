@@ -93,22 +93,17 @@ def post_detail(request, slug):
 
 
 def tag_filter(request, tag_title):
-    tag = Tag.objects.get(title=tag_title)
+    related_posts = fetch_related_posts(tag_title, returned_posts_number=20)
 
     most_popular_tags = Tag.objects.popular()[:5]
 
-    most_popular_posts = fetch_most_popular_posts(5)
-
-    related_posts = tag.posts.all()[:20]
-    related_annotated_posts = related_posts.annotate(
-        num_likes=Count("likes"),
-    )
+    most_popular_posts = fetch_most_popular_posts(returned_posts_number=5)
 
     context = {
-        "tag": tag.title,
+        "tag": tag_title,
         "popular_tags": [serialize_tag(tag) for tag in most_popular_tags],
-        "posts": [serialize_post_optimised(post) for post in related_annotated_posts],
-        "most_popular_posts": [serialize_post_optimised(post) for post in most_popular_posts],
+        "posts": [serialize_post(post) for post in related_posts],
+        "most_popular_posts": [serialize_post(post) for post in most_popular_posts],
     }
     return render(request, "posts-list.html", context)
 
