@@ -7,13 +7,13 @@ from django.contrib.auth.models import User
 class TagQuerySet(models.QuerySet):
 
     def popular(self):
-        return self.annotate(num_posts=Count('posts')).order_by('-num_posts')
+        return self.annotate(num_posts=Count("posts")).order_by("-num_posts")
 
 
 class PostQuerySet(models.QuerySet):
 
     def popular(self):
-        return self.annotate(num_likes=Count('likes')).order_by('-num_likes')
+        return self.annotate(num_likes=Count("likes")).order_by("-num_likes")
 
     def fetch_with_comments_count(self):
         posts = list(self)
@@ -42,7 +42,7 @@ class Post(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name="Автор",
-        limit_choices_to={'is_staff': True})
+        limit_choices_to={"is_staff": True})
     likes = models.ManyToManyField(
         User,
         related_name="liked_posts",
@@ -59,12 +59,12 @@ class Post(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('post_detail', args={'slug': self.slug})
+        return reverse("post_detail", args={"slug": self.slug})
 
     class Meta:
-        ordering = ['-published_at']
-        verbose_name = 'пост'
-        verbose_name_plural = 'посты'
+        ordering = ["-published_at"]
+        verbose_name = "пост"
+        verbose_name_plural = "посты"
 
 
 class Tag(models.Model):
@@ -79,12 +79,12 @@ class Tag(models.Model):
         self.title = self.title.lower()
 
     def get_absolute_url(self):
-        return reverse('tag_filter', args={'tag_title': self.slug})
+        return reverse("tag_filter", args={"tag_title": self.slug})
 
     class Meta:
         ordering = ["title"]
-        verbose_name = 'тег'
-        verbose_name_plural = 'теги'
+        verbose_name = "тег"
+        verbose_name_plural = "теги"
 
 
 class Comment(models.Model):
@@ -105,6 +105,6 @@ class Comment(models.Model):
         return f"{self.author.username} under {self.post.title}"
 
     class Meta:
-        ordering = ['published_at']
-        verbose_name = 'комментарий'
-        verbose_name_plural = 'комментарии'
+        ordering = ["published_at"]
+        verbose_name = "комментарий"
+        verbose_name_plural = "комментарии"
