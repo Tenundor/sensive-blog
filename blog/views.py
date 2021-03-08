@@ -36,16 +36,20 @@ def serialize_tag(tag):
 
 
 def fetch_most_popular_posts(returned_posts_number):
-    posts = Post.objects.popular()[:returned_posts_number] \
+    return Post.objects.popular()[:returned_posts_number] \
         .prefetch_related("author", Prefetch("tags", queryset=Tag.objects.annotate(num_posts=Count("posts"))))
-    return posts
 
 
 def fetch_most_fresh_posts(returned_posts_number):
-    posts = Post.objects.all().order_by("-published_at")[:returned_posts_number] \
+    return Post.objects.all().order_by("-published_at")[:returned_posts_number] \
         .prefetch_related("author", Prefetch("tags", queryset=Tag.objects.annotate(num_posts=Count("posts")))) \
         .annotate(num_comments=Count("comments"))
-    return posts
+
+
+def fetch_related_posts(tag_title, returned_posts_number):
+    return Tag.objects.get(title=tag_title).posts.all() \
+        .prefetch_related("author", Prefetch("tags", queryset=Tag.objects.annotate(num_posts=Count("posts")))) \
+        .annotate(num_comments=Count("comments"))[0:returned_posts_number]
 
 
 def index(request):
