@@ -22,18 +22,29 @@ def serialize_post(post):
     }
 
 
-def serialize_post_optimised(post):
-    return {
+def serialize_post_optimised(post, serialized_comments=None, is_teaser=True):
+    serialized_post = {
         "title": post.title,
-        "teaser_text": post.text[:200],
         "author": post.author.username,
-        "comments_amount": post.num_comments,
-        "image_url": post.image.url if post.image else None,
+        "comments_amount": getattr(post, 'num_comments', None),
         "published_at": post.published_at,
         "slug": post.slug,
+        "image_url": post.image.url if post.image else None,
         "tags": [serialize_tag_optimised(tag) for tag in post.tags.all()],
-        "first_tag_title": post.tags.all()[0].title,
     }
+    if is_teaser:
+        serialized_post.update(
+            teaser_text=post.text[:200],
+            first_tag_title=post.tags.all()[0].title,
+            comments_amount=getattr(post, 'num_comments', None),
+        )
+    else:
+        serialized_post.update(
+            text=post.text,
+            comments=serialized_comments if serialized_comments else [],
+            likes_amount=post.num_likes,
+        )
+    return serialized_post
 
 
 def serialize_tag(tag):
@@ -81,7 +92,7 @@ def post_detail(request, slug):
     post = Post.objects.get(slug=slug)
     comments = Comment.objects.filter(post=post)
     serialized_comments = []
-    for comment in comments:
+    for comment in post.comments.all():
         serialized_comments.append({
             "text": comment.text,
             "published_at": comment.published_at,
