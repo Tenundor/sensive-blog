@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.db.models import Count
+from django.http import Http404
 from blog.models import Comment, Post, Tag
 
 
@@ -68,10 +69,13 @@ def index(request):
 
 
 def post_detail(request, slug):
-    post = Post.objects.annotate(num_likes=Count("likes")) \
-        .prefetch_related("author") \
-        .prefetch_tags_with_posts_count() \
-        .get(slug=slug)
+    try:
+        post = Post.objects.annotate(num_likes=Count("likes")) \
+            .prefetch_related("author") \
+            .prefetch_tags_with_posts_count() \
+            .get(slug=slug)
+    except Post.DoesNotExist:
+        raise Http404("No Post matches the given query.")
     comments = Comment.objects.filter(post=post).select_related("author")
     serialized_comments = []
     for comment in comments.all():
